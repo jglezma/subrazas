@@ -12,6 +12,7 @@ import {
   TextInput,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import huella from './img/huella.png'
 
 const {width} = Dimensions.get('screen');
 function ListRazas() {
@@ -28,16 +29,11 @@ function ListRazas() {
       var names = Object.keys(json?.message);
       for (let index = 0; index < names.length; index++) {
         const element = names[index];
-        const imageResp = await fetch(
-          `https://dog.ceo/api/breed/${element}/images/random`,
-        );
-        const image = await imageResp.json();
         setRazas(oldArray => [
           ...oldArray,
           {
             name: element,
             subrazas: json.message[element],
-            image: image.message,
           },
         ]);
         setRazasFilter(oldArray => [
@@ -45,7 +41,6 @@ function ListRazas() {
           {
             name: element,
             subrazas: json.message[element],
-            image: image.message,
           },
         ]);
       }
@@ -62,7 +57,7 @@ function ListRazas() {
     } else {
       let element = razas.filter(function (el) {
         let name = el.name.toLowerCase();
-        return name.indexOf(text) > -1;
+        return name.indexOf(text.toLowerCase()) > -1;
       });
       setRazasFilter(element);
     }
@@ -90,20 +85,21 @@ function ListRazas() {
         onChangeText={onChangeText}
         value={text}
       />
-      <ScrollView contentInsetAdjustmentBehavior="automatic">
+      <ScrollView contentInsetAdjustmentBehavior="automatic"
+      style={{marginBottom: 100}}>
         {load
           ? null
           : razasFilter.map((raza: any, i: number) => (
               <TouchableOpacity
                 key={i}
                 style={styles.razas}
-                onPress={() => navigation.navigate('Detail', {raza})}>
-                {raza.image ? (
-                  <Image source={{uri: raza.image}} style={styles.image} />
-                ) : null}
+                onPress={raza.subrazas.length > 0 ? () => navigation.navigate('Subraza', {name: raza.name, raza: raza.subrazas}) : () => {}}>
                 <View style={styles.letterSpace}>
-                  <Text style={styles.title}>{raza.name}</Text>
-                  <Text style={styles.title}>{raza.subrazas.length}</Text>
+                  <View style={styles.row}>
+                    <Image source={huella} style={styles.image} />
+                    <Text style={styles.title}> {raza.name.toUpperCase()}</Text>
+                  </View>
+                  <Text style={styles.subtitle}>{raza.subrazas.length > 0 ? 'Ver subrazas ->' : ''}</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -114,13 +110,20 @@ function ListRazas() {
 
 const styles = StyleSheet.create({
   highlight: {
-    fontWeight: '700',
-    fontSize: 18,
+    fontWeight: '600',
+    fontSize: 20,
     textAlign: 'center',
+    color: '#333',
   },
   title: {
     fontWeight: '400',
     fontSize: 18,
+    color: '#333',
+  },
+  subtitle: {
+    fontWeight: '400',
+    fontSize: 18,
+    color: '#2196F3'
   },
   head: {
     borderBottomWidth: 0.5,
@@ -138,10 +141,11 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   image: {
-    height: 100,
-    width: 100,
-    marginHorizontal: 25,
-    marginVertical: 10,
+    height: 24,
+    width: 24,
+  },
+  row: {
+    flexDirection: 'row',
   },
   letterSpace: {
     width: width,

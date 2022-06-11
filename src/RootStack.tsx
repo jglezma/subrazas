@@ -19,10 +19,11 @@ const RootStack = () => {
         }}
       />
       <Stack.Screen
-        name="Detail"
+        name="Subraza"
         component={detailRaza}
         options={{
           contentStyle: {backgroundColor: '#fafafa'},
+          headerBackTitle: 'Atras'
         }}
       />
     </Stack.Navigator>
