@@ -13,12 +13,14 @@ import {
   Alert,
 } from 'react-native';
 import huella from './img/huella.png'
+import { saveSuccess, useAPI } from "./context/apiContext";
 const {width, height} = Dimensions.get('screen');
 
 function DetailRaza(props: any) {
   const [subraza, setSubraza] = useState([]);
   const [selected, setSelected] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const { favData } = useAPI();
 
   const razas = props.route.params;
   const getImage = async (name: string, e: any) => {
@@ -35,21 +37,21 @@ function DetailRaza(props: any) {
           img: image.message,
         },
       ]);
-      console.log('element', {
-        name: element,
-        img: image.message,
-      });
     }
-    console.log('raza', subraza);
   };
   useEffect(() => {
-    console.log('detail, ', razas.raza);
     getImage(razas.name, razas.raza);
   }, []);
 
   const showModal = async (e: any) => {
     setSelected(e);
     setModalVisible(true);
+  }
+
+  const favorite = async () => {
+    favData.dispatch(saveSuccess({'name': selected?.name.toUpperCase(), 'img': selected?.img}))
+    Alert.alert("Se ha guardado en favorito.");
+    setModalVisible(!modalVisible);
   }
 
   return (
@@ -89,7 +91,7 @@ function DetailRaza(props: any) {
             <View style={styles.head}>
               <TouchableOpacity
                   style={[styles.button, styles.buttonFav]}
-                  onPress={() => setModalVisible(!modalVisible)}
+                  onPress={() => favorite(!modalVisible)}
                 >
                   <Text style={styles.textStyle}>Guardar Favorito </Text>
                   <Image source={huella} style={styles.huella} />

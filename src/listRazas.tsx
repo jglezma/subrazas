@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -11,47 +11,25 @@ import {
   TouchableOpacity,
   TextInput,
 } from 'react-native';
+import {useAPI} from './context/apiContext';
 import {useNavigation} from '@react-navigation/native';
-import huella from './img/huella.png'
+import huella from './img/huella.png';
 
-const {width} = Dimensions.get('screen');
+const {width, height} = Dimensions.get('screen');
 function ListRazas() {
+  const {dog, dogFilter, load, favData} = useAPI();
+  const [favorite, setFavorite] = useState('');
   const [razas, setRazas] = useState([]);
   const [razasFilter, setRazasFilter] = useState([]);
-  const [load, setLoad] = useState(true);
   const navigation = useNavigation();
   const [text, onChangeText] = React.useState('');
 
   const getRazas = async () => {
-    try {
-      const response = await fetch('https://dog.ceo/api/breeds/list/all');
-      const json = await response.json();
-      var names = Object.keys(json?.message);
-      for (let index = 0; index < names.length; index++) {
-        const element = names[index];
-        setRazas(oldArray => [
-          ...oldArray,
-          {
-            name: element,
-            subrazas: json.message[element],
-          },
-        ]);
-        setRazasFilter(oldArray => [
-          ...oldArray,
-          {
-            name: element,
-            subrazas: json.message[element],
-          },
-        ]);
-      }
-      setLoad(false);
-    } catch (error) {
-      console.error(error);
-    }
+    setRazas(dog);
+    setRazasFilter(dogFilter);
   };
 
   const onFilter = () => {
-    console.log('e', text);
     if (text == '') {
       setRazasFilter(razas);
     } else {
@@ -68,8 +46,12 @@ function ListRazas() {
   }, [text]);
 
   useEffect(() => {
+    setFavorite(favData.fav.favorite);
+  }, [favData.fav]);
+
+  useEffect(() => {
     getRazas();
-  }, []);
+  }, [load]);
 
   return (
     <SafeAreaView
@@ -85,21 +67,42 @@ function ListRazas() {
         onChangeText={onChangeText}
         value={text}
       />
-      <ScrollView contentInsetAdjustmentBehavior="automatic"
-      style={{marginBottom: 100}}>
+      {favorite ? (
+        <>
+          <Text style={styles.modalText}>
+            {favorite.name}
+          </Text>
+          <Image source={{uri: favorite?.img}} style={styles.imageFav} />
+        </>
+      ) : (
+        <Text style={styles.modalText}>No existe perro favorito</Text>
+      )}
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        style={{marginBottom: favorite ? height / 2.5: 100}}>
         {load
           ? null
           : razasFilter.map((raza: any, i: number) => (
               <TouchableOpacity
                 key={i}
                 style={styles.razas}
-                onPress={raza.subrazas.length > 0 ? () => navigation.navigate('Subraza', {name: raza.name, raza: raza.subrazas}) : () => {}}>
+                onPress={
+                  raza.subrazas.length > 0
+                    ? () =>
+                        navigation.navigate('Subraza', {
+                          name: raza.name,
+                          raza: raza.subrazas,
+                        })
+                    : () => {}
+                }>
                 <View style={styles.letterSpace}>
                   <View style={styles.row}>
                     <Image source={huella} style={styles.image} />
                     <Text style={styles.title}> {raza.name.toUpperCase()}</Text>
                   </View>
-                  <Text style={styles.subtitle}>{raza.subrazas.length > 0 ? 'Ver subrazas ->' : ''}</Text>
+                  <Text style={styles.subtitle}>
+                    {raza.subrazas.length > 0 ? 'Ver subrazas ->' : ''}
+                  </Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -115,6 +118,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333',
   },
+  imageFav: {
+    width: width,
+    height: height / 4,
+    resizeMode: 'contain'
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+    fontSize: 18,
+    color: '#2196F3',
+    fontWeight: '600',
+  },
   title: {
     fontWeight: '400',
     fontSize: 18,
@@ -123,7 +138,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontWeight: '400',
     fontSize: 18,
-    color: '#2196F3'
+    color: '#2196F3',
   },
   head: {
     borderBottomWidth: 0.5,
